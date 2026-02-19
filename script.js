@@ -90,7 +90,8 @@ function accion(e) {
             celda.textContent = `${fila},${columna}`;
         }
 
-    } else if (e.key === "1" && !imgExistente) {
+    }
+    else if (e.key === "1" && !imgExistente) {
         if (celda.classList.contains("bomba")) {
             const img = document.createElement("img");
             img.src = "img/bom.png";
@@ -101,14 +102,27 @@ function accion(e) {
         }
         else {
             let minas = 0;
-            alert(fila)
-            alert(columna)
-            for (let i = 0; i < 8; i++) {
 
+            for (let f = -1; f <= 1; f++) {
+                for (let c = -1; c <= 1; c++) {
+
+                    const nuevaFila = fila + f;
+                    const nuevaColumna = columna + c;
+
+                    if (nuevaFila >= 0 && nuevaFila < 10 &&
+                        nuevaColumna >= 0 && nuevaColumna < 10) {
+
+                        const vecina = document.getElementById(`celda-${nuevaFila}-${nuevaColumna}`);
+
+                        if (vecina && vecina.classList.contains("bomba")) {
+                            minas++;
+                        }
+                    }
+                }
             }
 
             const img = document.createElement("img");
-            img.src = "img/2.png";
+            img.src = `img/${minas}.png`;
             img.style.width = "100%";
             img.style.height = "100%";
             celda.textContent = "";
