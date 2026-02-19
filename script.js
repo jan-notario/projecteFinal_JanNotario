@@ -85,7 +85,7 @@ function accion(e) {
             img.style.height = "100%";
             celda.textContent = "";
             celda.appendChild(img);
-        } else {
+        } else if (imgExistente.src === "http://127.0.0.1:5500/img/flag.png") {
             celda.removeChild(imgExistente);
             celda.textContent = `${fila},${columna}`;
         }
@@ -100,6 +100,13 @@ function accion(e) {
             celda.appendChild(img);
         }
         else {
+            let minas = 0;
+            alert(fila)
+            alert(columna)
+            for (let i = 0; i < 8; i++) {
+
+            }
+
             const img = document.createElement("img");
             img.src = "img/2.png";
             img.style.width = "100%";
@@ -124,7 +131,6 @@ function colocarBombaAleatoria() {
 
         if (!celda.classList.contains("bomba")) {
             celda.classList.add("bomba");
-            alert(`💣 Bomba colocada en ${idCelda}`);
         } else {
             i--;
         }
