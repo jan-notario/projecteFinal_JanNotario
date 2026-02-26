@@ -21,70 +21,18 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     contenedor.appendChild(tabla);
-});
 
-// MOVIMIENTO PLAYER
+    let primeraAccion = true;
 
-const player = document.getElementById('player');
-let x = 5, y = 5;
-let velocidad = 5;
+    // DESTAPAR
+    tabla.addEventListener("click", function (e) {
 
-const teclas = {};
-window.addEventListener('keydown', e => teclas[e.key] = true);
-window.addEventListener('keyup', e => teclas[e.key] = false);
+        if (e.target.tagName !== "TD") return;
 
-function actualizar() {
-    if (teclas['w'] && y > 0) y -= velocidad;
-    if (teclas['s'] && y < 595) y += velocidad;
-    if (teclas['a'] && x > 0) x -= velocidad;
-    if (teclas['d'] && x < 595) x += velocidad;
-
-    player.style.transform = `translate3d(${x}px, ${y}px, 0)`;
-
-    requestAnimationFrame(actualizar);
-}
-requestAnimationFrame(actualizar);
-
-
-// LOGICA BUSCAMINAS
-
-
-const tamaño = 63;
-
-window.addEventListener("keydown", accion);
-let primeraAccion = true;
-
-function accion(e) {
-
-    const fila = Math.floor(y / tamaño);
-    const columna = Math.floor(x / tamaño);
-    const idCelda = `celda-${fila}-${columna}`;
-    const celda = document.getElementById(idCelda);
-
-
-
-    const imgExistente = celda.querySelector("img");
-
-    // COLOCAR / QUITAR BANDERA
-
-    if (e.key === "Enter") {
-
-        if (!imgExistente) {
-            const img = document.createElement("img");
-            img.src = "img/flag.png";
-            img.style.width = "100%";
-            img.style.height = "100%";
-            celda.textContent = "";
-            celda.appendChild(img);
-        } else if (imgExistente.src.includes("flag.png")) {
-            celda.removeChild(imgExistente);
-            celda.textContent = `${fila},${columna}`;
-        }
-    }
-
-    // DESTAPAR CELDA
-
-    else if (e.key === "1") {
+        const celda = e.target;
+        const partes = celda.id.split("-");
+        const fila = parseInt(partes[1]);
+        const columna = parseInt(partes[2]);
 
         if (primeraAccion) {
             colocarBombaAleatoria();
@@ -104,8 +52,43 @@ function accion(e) {
 
             destaparCelda(fila, columna);
         }
-    }
-}
+    });
+
+    // BANDERA
+    tabla.addEventListener("contextmenu", function (e) {
+
+        e.preventDefault();
+
+        if (e.target.tagName !== "TD") return;
+
+        const celda = e.target;
+        const imgExistente = celda.querySelector("img");
+
+        if (!celda.classList.contains("abierta")) {
+
+            if (!imgExistente) {
+
+                const img = document.createElement("img");
+                img.src = "img/flag.png";
+                img.style.width = "100%";
+                img.style.height = "100%";
+                celda.textContent = "";
+                celda.appendChild(img);
+
+            } else if (imgExistente.src.includes("flag.png")) {
+
+                celda.removeChild(imgExistente);
+
+                const partes = celda.id.split("-");
+                celda.textContent = `${partes[1]},${partes[2]}`;
+            }
+        }
+    });
+
+});
+
+const tamaño = 63;
+
 
 // CONTADOR DE MINAS
 
@@ -133,13 +116,18 @@ function contarMinas(fila, columna) {
     return minas;
 }
 
+
 // DESTAPADO MULTIPLE
 
 function destaparCelda(fila, columna) {
 
     const celda = document.getElementById(`celda-${fila}-${columna}`);
 
-    if (celda.classList.contains("abierta") || celda.classList.contains("bomba")) {
+    if (
+        celda.classList.contains("abierta") ||
+        celda.classList.contains("bomba") ||
+        celda.querySelector("img")?.src.includes("flag.png")
+    ) {
         return;
     }
 
@@ -155,7 +143,6 @@ function destaparCelda(fila, columna) {
     img.style.height = "100%";
     celda.appendChild(img);
 
-    // Si no hay minas alrededor sigue expandiendo
     if (minas === 0) {
         for (let i = -1; i <= 1; i++) {
             for (let j = -1; j <= 1; j++) {
@@ -163,13 +150,15 @@ function destaparCelda(fila, columna) {
                 const nuevaFila = fila + i;
                 const nuevaColumna = columna + j;
 
-                if (nuevaFila >= 0 && nuevaFila < 10 && nuevaColumna >= 0 && nuevaColumna < 10) {
+                if (nuevaFila >= 0 && nuevaFila < 10 &&
+                    nuevaColumna >= 0 && nuevaColumna < 10) {
                     destaparCelda(nuevaFila, nuevaColumna);
                 }
             }
         }
     }
 }
+
 
 // COLOCAR BOMBAS
 
