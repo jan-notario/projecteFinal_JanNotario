@@ -1,20 +1,31 @@
-// CREACION DEL MAPA
+let primeraAccion = true;
+let tamaño = 20;
+let totalBombas = 12;
 
 document.addEventListener("DOMContentLoaded", function () {
 
     const contenedor = document.getElementById("contenedor");
     const tabla = document.createElement("table");
 
-    for (let fila = 0; fila < 10; fila++) {
+    // ===== FILA MENU =====
+    const filaMenu = document.createElement("tr");
+    const celdaMenu = document.createElement("td");
+
+    celdaMenu.colSpan = tamaño;
+    celdaMenu.id = "menu";
+    celdaMenu.textContent = "Buscaminas - 12 minas";
+
+    filaMenu.appendChild(celdaMenu);
+    tabla.appendChild(filaMenu);
+
+    // ===== TABLERO =====
+    for (let fila = 0; fila < tamaño; fila++) {
         const filas = document.createElement("tr");
 
-        for (let columna = 0; columna < 10; columna++) {
-            const celdas = document.createElement("td");
-
-            celdas.id = `celda-${fila}-${columna}`;
-            celdas.textContent = `${fila},${columna}`;
-
-            filas.appendChild(celdas);
+        for (let columna = 0; columna < tamaño; columna++) {
+            const celda = document.createElement("td");
+            celda.id = `celda-${fila}-${columna}`;
+            filas.appendChild(celda);
         }
 
         tabla.appendChild(filas);
@@ -22,77 +33,52 @@ document.addEventListener("DOMContentLoaded", function () {
 
     contenedor.appendChild(tabla);
 
-    let primeraAccion = true;
-
-    // DESTAPAR
+    // CLICK IZQUIERDO
     tabla.addEventListener("click", function (e) {
 
-        if (e.target.tagName !== "TD") return;
+        const celda = e.target.closest("td");
+        if (!celda || celda.id === "menu") return;
 
-        const celda = e.target;
+        if (celda.textContent === "🚩") return;
+
         const partes = celda.id.split("-");
         const fila = parseInt(partes[1]);
         const columna = parseInt(partes[2]);
 
         if (primeraAccion) {
-            colocarBombaAleatoria();
+            colocarBombaAleatoria(fila, columna);
             primeraAccion = false;
         }
 
         if (celda.classList.contains("bomba")) {
-
-            const img = document.createElement("img");
-            img.src = "img/bom.png";
-            img.style.width = "100%";
-            img.style.height = "100%";
-            celda.textContent = "";
-            celda.appendChild(img);
-
+            celda.textContent = "💣";
+            celda.style.backgroundColor = "red";
         } else {
-
             destaparCelda(fila, columna);
         }
     });
 
-    // BANDERA
+    // CLICK DERECHO
     tabla.addEventListener("contextmenu", function (e) {
 
         e.preventDefault();
 
-        if (e.target.tagName !== "TD") return;
+        const celda = e.target.closest("td");
+        if (!celda || celda.id === "menu") return;
 
-        const celda = e.target;
-        const imgExistente = celda.querySelector("img");
+        if (celda.classList.contains("abierta")) return;
 
-        if (!celda.classList.contains("abierta")) {
-
-            if (!imgExistente) {
-
-                const img = document.createElement("img");
-                img.src = "img/flag.png";
-                img.style.width = "100%";
-                img.style.height = "100%";
-                celda.textContent = "";
-                celda.appendChild(img);
-
-            } else if (imgExistente.src.includes("flag.png")) {
-
-                celda.removeChild(imgExistente);
-
-                const partes = celda.id.split("-");
-                celda.textContent = `${partes[1]},${partes[2]}`;
-            }
+        if (celda.textContent === "🚩") {
+            celda.textContent = "";
+        } else if (celda.textContent === "") {
+            celda.textContent = "🚩";
         }
     });
 
 });
 
-const tamaño = 63;
-
-
-// CONTADOR DE MINAS
-
 function contarMinas(fila, columna) {
+
     let minas = 0;
 
     for (let i = -1; i <= 1; i++) {
@@ -101,8 +87,10 @@ function contarMinas(fila, columna) {
             const nuevaFila = fila + i;
             const nuevaColumna = columna + j;
 
-            if (nuevaFila >= 0 && nuevaFila < 10 &&
-                nuevaColumna >= 0 && nuevaColumna < 10) {
+            if (
+                nuevaFila >= 0 && nuevaFila < tamaño &&
+                nuevaColumna >= 0 && nuevaColumna < tamaño
+            ) {
 
                 const vecina = document.getElementById(`celda-${nuevaFila}-${nuevaColumna}`);
 
@@ -116,9 +104,6 @@ function contarMinas(fila, columna) {
     return minas;
 }
 
-
-// DESTAPADO MULTIPLE
-
 function destaparCelda(fila, columna) {
 
     const celda = document.getElementById(`celda-${fila}-${columna}`);
@@ -126,22 +111,18 @@ function destaparCelda(fila, columna) {
     if (
         celda.classList.contains("abierta") ||
         celda.classList.contains("bomba") ||
-        celda.querySelector("img")?.src.includes("flag.png")
-    ) {
-        return;
-    }
+        celda.textContent === "🚩"
+    ) return;
 
     celda.classList.add("abierta");
+    celda.classList.add("destapado");
 
     const minas = contarMinas(fila, columna);
 
-    celda.textContent = "";
-
-    const img = document.createElement("img");
-    img.src = `img/${minas}.png`;
-    img.style.width = "100%";
-    img.style.height = "100%";
-    celda.appendChild(img);
+    if (minas > 0) {
+        celda.textContent = minas;
+        celda.setAttribute("data-num", minas);
+    }
 
     if (minas === 0) {
         for (let i = -1; i <= 1; i++) {
@@ -150,8 +131,10 @@ function destaparCelda(fila, columna) {
                 const nuevaFila = fila + i;
                 const nuevaColumna = columna + j;
 
-                if (nuevaFila >= 0 && nuevaFila < 10 &&
-                    nuevaColumna >= 0 && nuevaColumna < 10) {
+                if (
+                    nuevaFila >= 0 && nuevaFila < tamaño &&
+                    nuevaColumna >= 0 && nuevaColumna < tamaño
+                ) {
                     destaparCelda(nuevaFila, nuevaColumna);
                 }
             }
@@ -159,22 +142,22 @@ function destaparCelda(fila, columna) {
     }
 }
 
+function colocarBombaAleatoria(filaInicial, columnaInicial) {
 
-// COLOCAR BOMBAS
+    let bombasColocadas = 0;
 
-function colocarBombaAleatoria() {
-    for (let i = 0; i < 12; i++) {
+    while (bombasColocadas < totalBombas) {
 
-        const fila = Math.floor(Math.random() * 10);
-        const columna = Math.floor(Math.random() * 10);
+        const fila = Math.floor(Math.random() * tamaño);
+        const columna = Math.floor(Math.random() * tamaño);
 
-        const idCelda = `celda-${fila}-${columna}`;
-        const celda = document.getElementById(idCelda);
+        if (fila === filaInicial && columna === columnaInicial) continue;
+
+        const celda = document.getElementById(`celda-${fila}-${columna}`);
 
         if (!celda.classList.contains("bomba")) {
             celda.classList.add("bomba");
-        } else {
-            i--;
+            bombasColocadas++;
         }
     }
 }
