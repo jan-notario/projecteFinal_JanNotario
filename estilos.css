@@ -180,6 +180,7 @@ td[data-num="8"] {
 select {
     background: linear-gradient(to bottom, #1f386f, #252936);
     color: white;
+    background-color: #1f386f;
     border: none;
     border-radius: 10px;
     padding: 8px;
